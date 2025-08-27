@@ -80,13 +80,13 @@ class Glicko2(object):
         return Rating(mu, phi, sigma)
 
     def scale_down(self, rating: Rating, ratio: float = 173.7178) -> Rating:
-        mu : float = (rating.mu - self.mu) / ratio
-        phi : float = rating.phi / ratio
+        mu: float = (rating.mu - self.mu) / ratio
+        phi: float = rating.phi / ratio
         return self.create_rating(mu, phi, rating.sigma)
 
     def scale_up(self, rating: Rating, ratio: float = 173.7178) -> Rating:
-        mu : float = rating.mu * ratio + self.mu
-        phi : float = rating.phi * ratio
+        mu: float = rating.mu * ratio + self.mu
+        phi: float = rating.phi * ratio
         return self.create_rating(mu, phi, rating.sigma)
 
     def reduce_impact(self, rating: Rating) -> float:
@@ -95,28 +95,32 @@ class Glicko2(object):
         """
         return 1.0 / math.sqrt(1 + (3 * rating.phi**2) / (math.pi**2))
 
-    def expect_score(self, rating: Rating, other_rating: Rating, impact : float) -> float:
+    def expect_score(
+        self, rating: Rating, other_rating: Rating, impact: float
+    ) -> float:
         return 1.0 / (1 + math.exp(-impact * (rating.mu - other_rating.mu)))
 
-    def determine_sigma(self, rating: Rating, difference: float, variance: float) -> float:
+    def determine_sigma(
+        self, rating: Rating, difference: float, variance: float
+    ) -> float:
         """Determines new sigma."""
-        phi : float = rating.phi
-        difference_squared : float = difference**2
+        phi: float = rating.phi
+        difference_squared: float = difference**2
         # 1. Let a = ln(s^2), and define f(x)
-        alpha : float = math.log(rating.sigma**2)
+        alpha: float = math.log(rating.sigma**2)
 
-        def f(x : float) -> float:
+        def f(x: float) -> float:
             """This function is twice the conditional log-posterior density of
             phi, and is the optimality criterion.
             """
-            tmp : float = phi**2 + variance + math.exp(x)
-            a : float = math.exp(x) * (difference_squared - tmp) / (2 * tmp**2)
-            b : float = (x - alpha) / (self.tau**2)
+            tmp: float = phi**2 + variance + math.exp(x)
+            a: float = math.exp(x) * (difference_squared - tmp) / (2 * tmp**2)
+            b: float = (x - alpha) / (self.tau**2)
             return a - b
 
         # 2. Set the initial values of the iterative algorithm.
-        a : float = alpha
-        b : float = 0.0
+        a: float = alpha
+        b: float = 0.0
         if difference_squared > phi**2 + variance:
             b = math.log(difference_squared - phi**2 - variance)
         else:
@@ -133,15 +137,15 @@ class Glicko2(object):
         # (c) Set B <- C and fB <- fC.
         # (d) Stop if |B-A| <= e. Repeat the above three steps otherwise.
         while abs(b - a) > self.epsilon:
-            c : float = a + (a - b) * f_a / (f_b - f_a)
-            f_c : float = f(c)
+            c: float = a + (a - b) * f_a / (f_b - f_a)
+            f_c: float = f(c)
             if f_c * f_b < 0:
                 a, f_a = b, f_b
             else:
                 f_a /= 2
             b, f_b = c, f_c
         # 5. Once |B-A| <= e, set s' <- e^(A/2)
-        result_sigma : float = math.exp(1) ** (a / 2)
+        result_sigma: float = math.exp(1) ** (a / 2)
         return result_sigma
 
     def rate(self, rating: Rating, series: list[tuple[float, Rating]]) -> Rating:
@@ -166,16 +170,16 @@ class Glicko2(object):
             variance_inv += impact**2 * expected_score * (1 - expected_score)
             difference += impact * (actual_score - expected_score)
         difference /= variance_inv
-        variance : float = 1.0 / variance_inv
+        variance: float = 1.0 / variance_inv
         # Step 5. Determine the new value, Sigma', ot the sigma. This
         #         computation requires iteration.
-        sigma : float = self.determine_sigma(rating, difference, variance)
+        sigma: float = self.determine_sigma(rating, difference, variance)
         # Step 6. Update the rating deviation to the new pre-rating period
         #         value, Phi*.
         phi_star = math.sqrt(rating.phi**2 + sigma**2)
         # Step 7. Update the rating and RD to the new values, Mu' and Phi'.
-        phi : float = 1.0 / math.sqrt(1 / phi_star**2 + 1 / variance)
-        mu : float = rating.mu + phi**2 * (difference / variance)
+        phi: float = 1.0 / math.sqrt(1 / phi_star**2 + 1 / variance)
+        mu: float = rating.mu + phi**2 * (difference / variance)
         # Step 8. Convert ratings and RD's back to original scale.
         return self.scale_up(self.create_rating(mu, phi, sigma))
 
