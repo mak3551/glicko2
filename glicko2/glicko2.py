@@ -24,11 +24,23 @@ LOSS: float = 0.0
 MU: float = 1500
 PHI: float = 350
 SIGMA: float = 0.06
+
+# In the Mark Glickman's paper,is is "τ" (in Step 1). It constrains the change in volatility over time.
+# He says Reasonable choices are between 0.3 and 1.2,
+# and smaller values of τ prevent the volatility measures from changing by large amounts.
 TAU: float = 1.0
+
+# convergence tolerance, ε (used in Step 5).
 EPSILON: float = 0.000001
 
 
 class Rating(object):
+    """
+    Each player has a rating, a rating deviation, and a rating volatility.
+    In this code, a rating is "mu", a rating deviation is "phi", and a rating volatility is "sigma".
+    In the Mark Glickman's paper, "r", "RD", and "σ". https://www.glicko.net/glicko/glicko2.pdf
+    """
+
     mu: float
     phi: float
     sigma: float
@@ -80,11 +92,18 @@ class Glicko2(object):
         return Rating(mu, phi, sigma)
 
     def scale_down(self, rating: Rating, ratio: float = 173.7178) -> Rating:
+        """
+        In the Mark Glickman's paper, he says the rating scale for Glicko-2 is different from that of Original Glicko (and Elo).
+        This function converts rating and RD from old-style to Glicko-2's scale.
+        """
         mu: float = (rating.mu - self.mu) / ratio
         phi: float = rating.phi / ratio
         return self.create_rating(mu, phi, rating.sigma)
 
     def scale_up(self, rating: Rating, ratio: float = 173.7178) -> Rating:
+        """
+        This function converts rating and RD from Glicko-2 to old-style.
+        """
         mu: float = rating.mu * ratio + self.mu
         phi: float = rating.phi * ratio
         return self.create_rating(mu, phi, rating.sigma)
@@ -98,12 +117,15 @@ class Glicko2(object):
     def expect_score(
         self, rating: Rating, other_rating: Rating, impact: float
     ) -> float:
+        """
+        It calculates expected outcome of a game.
+        """
         return 1.0 / (1 + math.exp(-impact * (rating.mu - other_rating.mu)))
 
     def determine_sigma(
         self, rating: Rating, difference: float, variance: float
     ) -> float:
-        """Determines new sigma."""
+        """Determines new sigma. (Step 5)"""
         phi: float = rating.phi
         difference_squared: float = difference**2
         # 1. Let a = ln(s^2), and define f(x)
@@ -149,6 +171,15 @@ class Glicko2(object):
         return result_sigma
 
     def rate(self, rating: Rating, series: list[tuple[float, Rating]]) -> Rating:
+        """
+        It returns new rating from old rating and game outcomes.
+            rating : old rating
+            series : game outcomes in rating period, like [( WIN , player1 ), ( LOSE, player2), ( LOSE , player3)]
+
+        In the Mark Glickman's paper, he says Glicko-2 works best when the number of games in a rating period is moderate to large,
+        say an average of at least 10-15 games per player in a rating period.
+        """
+
         # Step 2. For each player, convert the rating and RD's onto the
         #         Glicko-2 scale.
         rating = self.scale_down(rating)
@@ -165,11 +196,15 @@ class Glicko2(object):
             return self.scale_up(self.create_rating(rating.mu, phi_star, rating.sigma))
         for actual_score, other_rating in series:
             other_rating = self.scale_down(other_rating)
+            # "impact" is g(φ).
             impact = self.reduce_impact(other_rating)
+            # "expected_score" is E(μ, μj, φj).
             expected_score = self.expect_score(rating, other_rating, impact)
             variance_inv += impact**2 * expected_score * (1 - expected_score)
             difference += impact * (actual_score - expected_score)
+        # The value of "difference" is the quantity ∆ (Step 4).
         difference /= variance_inv
+        # The value of "variance" is the quantity v (Step 3).
         variance: float = 1.0 / variance_inv
         # Step 5. Determine the new value, Sigma', ot the sigma. This
         #         computation requires iteration.
