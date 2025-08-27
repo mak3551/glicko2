@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from glicko2 import Glicko2, WIN, DRAW, LOSS
+from src.glicko2 import Glicko2, WIN, DRAW, LOSS
 
 
 class almost(object):
