@@ -31,6 +31,9 @@ class almost:
 
 
 def test_glickman_example() -> None:
+    """
+    This test uses example calculation in Mark Glickman's paper. https://www.glicko.net/glicko/glicko2.pdf
+    """
     env: Glicko2 = Glicko2(tau=0.5)
     r1 = env.create_rating(1500, 200, 0.06)
     r2 = env.create_rating(1400, 30)
