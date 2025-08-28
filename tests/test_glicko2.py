@@ -22,7 +22,7 @@ class almost:
         return int(math.fabs(mantissa(val1, fmt) - mantissa(val2, fmt))) <= 1
 
     def almost_equals_rating(self, other: Rating) -> bool:
-        return self.almost_equals(self.val.mu, other.mu) and self.almost_equals(
+        return self.almost_equals(self.val.r, other.r) and self.almost_equals(
             self.val.sigma, other.sigma
         )
 
