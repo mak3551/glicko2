@@ -38,3 +38,6 @@ class Player:
         if not isinstance(other, Player):
             return NotImplemented
         return self.id == other.id and self.rating == other.rating
+
+    def __repr__(self) -> str:
+        return f"{self.__class__.__name__}(id={self.id}, rating={self.rating}, rating_history={self.rating_history}"
