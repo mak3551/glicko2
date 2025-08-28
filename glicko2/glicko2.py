@@ -29,7 +29,8 @@ SIGMA_INITIAL: float = 0.06
 
 # In the Mark Glickman's paper,is is "τ" (in Step 1). It constrains the change in volatility over time.
 # He says Reasonable choices are between 0.3 and 1.2,
-# and smaller values of τ prevent the volatility measures from changing by large amounts.
+# though the system should be tested to decide which value results in greatest predictive accuracy.
+# Smaller values of τ prevent the volatility measures from changing by large amounts.
 TAU: float = 1.0
 
 # convergence tolerance, ε (used in Step 5).
@@ -80,45 +81,34 @@ class RatingInGlicko2:
 
 
 class Glicko2(object):
-    r: float
-    RD: float
-    sigma: float
     tau: float
-    epsilon: float
 
-    def __init__(
-        self,
-        r: float = R_INITIAL,
-        RD: float = RD_INITIAL,
-        sigma: float = SIGMA_INITIAL,
-        tau: float = TAU,
-        epsilon: float = EPSILON,
-    ):
-        self.r = r
-        self.RD = RD
-        self.sigma = sigma
+    def __init__(self, tau: float = TAU):
         self.tau = tau
-        self.epsilon = epsilon
 
     def create_rating(
         self, r: float, RD: float = RD_INITIAL, sigma: float = SIGMA_INITIAL
     ) -> Rating:
         return Rating(r, RD, sigma)
 
-    def scale_down(self, rating: Rating, ratio: float = 173.7178) -> RatingInGlicko2:
+    def scale_down(
+        self, rating: Rating, ratio: float = 173.7178, ref_r: float = 1500
+    ) -> RatingInGlicko2:
         """
         In the Mark Glickman's paper, he says the rating scale for Glicko-2 is different from that of Original Glicko (and Elo).
-        This function converts rating and RD from old-style to Glicko-2's scale.
+        This function converts rating and RD from old-style to Glicko-2's scale (Step 2 in the paper).
         """
-        mu: float = (rating.r - self.r) / ratio
+        mu: float = (rating.r - ref_r) / ratio
         phi: float = rating.RD / ratio
         return RatingInGlicko2(mu, phi, rating.sigma)
 
-    def scale_up(self, rating: RatingInGlicko2, ratio: float = 173.7178) -> Rating:
+    def scale_up(
+        self, rating: RatingInGlicko2, ratio: float = 173.7178, ref_r: float = 1500
+    ) -> Rating:
         """
         This function converts rating and RD from Glicko-2 to old-style.
         """
-        r: float = rating.mu * ratio + self.r
+        r: float = rating.mu * ratio + ref_r
         RD: float = rating.phi * ratio
         return Rating(r, RD, rating.sigma)
 
@@ -172,7 +162,7 @@ class Glicko2(object):
         #     fA <- fA/2.
         # (c) Set B <- C and fB <- fC.
         # (d) Stop if |B-A| <= e. Repeat the above three steps otherwise.
-        while abs(b - a) > self.epsilon:
+        while abs(b - a) > EPSILON:
             c: float = a + (a - b) * f_a / (f_b - f_a)
             f_c: float = f(c)
             if f_c * f_b < 0:
