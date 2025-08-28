@@ -3,7 +3,7 @@ from glicko2.glicko2 import Glicko2, WIN, LOSS, Rating
 import math
 
 
-ALLOWABLE: float = 0.01
+ALLOWABLE: float = 0.005
 
 
 def assess_value(value: float, ref: float) -> bool:
