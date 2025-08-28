@@ -61,6 +61,11 @@ class Rating:
         args = (c.__module__, c.__name__, self.r, self.RD, self.sigma)
         return "%s.%s(r=%.3f, RD=%.3f, sigma=%.3f)" % args
 
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, Rating):
+            return NotImplemented
+        return self.r == other.r and self.RD == other.RD and self.sigma == other.sigma
+
 
 class RatingInGlicko2:
     """
