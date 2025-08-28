@@ -113,7 +113,9 @@ class Glicko2(object):
         return Rating(r, RD, rating.sigma)
 
     def reduce_impact(self, rating: RatingInGlicko2) -> float:
-        """The original form is `g(RD)`. This function reduces the impact of
+        """
+        g(φ)
+        This function reduces the impact of
         games as a function of an opponent's RD.
         """
         return 1.0 / math.sqrt(1 + (3 * rating.phi**2) / (math.pi**2))
@@ -122,6 +124,7 @@ class Glicko2(object):
         self, rating: RatingInGlicko2, other_rating: RatingInGlicko2, impact: float
     ) -> float:
         """
+        E(μ,μj,φj)
         It calculates expected outcome of a game.
         """
         return 1.0 / (1 + math.exp(-impact * (rating.mu - other_rating.mu)))
