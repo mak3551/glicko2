@@ -3,31 +3,14 @@ from glicko2.glicko2 import Glicko2, WIN, LOSS, Rating
 import math
 
 
-class almost:
-    val: Rating
-    precision: int
+ALLOWABLE: float = 0.01
 
-    def __init__(self, val: Rating, precision: int = 3):
-        self.val = val
-        self.precision = precision
 
-    def almost_equals(self, val1: float, val2: float) -> bool:
-        if round(val1, self.precision) == round(val2, self.precision):
-            return True
-        fmt: str = "%.{0}f".format(self.precision)
-
-        def mantissa(f: float, fmt: str) -> int:
-            return int((fmt % f).replace(".", ""))
-
-        return int(math.fabs(mantissa(val1, fmt) - mantissa(val2, fmt))) <= 1
-
-    def almost_equals_rating(self, other: Rating) -> bool:
-        return self.almost_equals(self.val.r, other.r) and self.almost_equals(
-            self.val.sigma, other.sigma
-        )
-
-    def __repr__(self) -> str:
-        return repr(self.val)
+def assess_value(value: float, ref: float) -> bool:
+    """
+    It assesses if result value almost equals to reference value.
+    """
+    return math.fabs(value - ref) < ALLOWABLE
 
 
 def test_glickman_example() -> None:
@@ -40,10 +23,10 @@ def test_glickman_example() -> None:
     r3 = env.create_rating(1550, 100)
     r4 = env.create_rating(1700, 300)
     rated: Rating = env.rate(r1, [(WIN, r2), (LOSS, r3), (LOSS, r4)])
-    # env.create_rating2(1464.06, 151.52, 0.05999)
-    assert almost(rated).almost_equals_rating(
-        env.create_rating(1464.051, 151.515, 0.05999)
-    )
-    assert math.fabs(env.expect_score(r1, r2) - 0.639) < 0.002
-    assert math.fabs(env.expect_score(r1, r3) - 0.432) < 0.002
-    assert math.fabs(env.expect_score(r1, r4) - 0.303) < 0.002
+
+    assert assess_value(rated.r, 1464.051)
+    assert assess_value(rated.RD, 151.515)
+    assert assess_value(rated.sigma, 0.05999)
+    assert assess_value(env.expect_score(r1, r2), 0.639)
+    assert assess_value(env.expect_score(r1, r3), 0.432)
+    assert assess_value(env.expect_score(r1, r4), 0.303)
