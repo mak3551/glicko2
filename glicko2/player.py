@@ -12,10 +12,27 @@ class Player:
     rating: glicko2.Rating
     rating_history: list[tuple[date, glicko2.Rating]]
 
-    def __init__(self, id: int, rating: glicko2.Rating):
+    def __init__(
+        self,
+        id: int,
+        rating: glicko2.Rating | None = None,
+        rating_history: list[tuple[date, glicko2.Rating]] | None = None,
+    ):
+        """
+        arguments:
+            id : it is required. It must be unique number and corresponds to one player.
+            rating : optional. When it lacks, inital rating would be used.
+            rating_history : optional.
+        """
         self.id = id
-        self.rating = rating
-        self.rating_history = []
+        if rating is None:
+            self.rating = glicko2.Rating()
+        else:
+            self.rating = rating
+        if rating_history is None:
+            self.rating_history = []
+        else:
+            self.rating_history = rating_history
 
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, Player):
