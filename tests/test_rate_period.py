@@ -1,6 +1,7 @@
 from glicko2.rate_period import _get_series_of_player
 from glicko2.glicko2 import WIN, LOSS, DRAW
 from glicko2.player import Player
+import pytest
 
 
 def test_get_series_of_player() -> None:
@@ -25,3 +26,9 @@ def test_get_series_of_player() -> None:
         (LOSS, p_c.rating),
         (DRAW, p_a.rating),
     ]
+    invalid_matches: list[tuple[Player, Player, float]] = [
+        (p_a, p_c, WIN),
+        (p_b, p_b, WIN),
+    ]
+    with pytest.raises(RuntimeError):
+        _get_series_of_player(invalid_matches, p_b)
