@@ -4,7 +4,9 @@ glicko2
 ~~~~~~~
 
 The Glicko2 rating system.
+This code is a fork of https://github.com/sublee/glicko2.
 
+:copyright: (c) 2025, by mak3551
 :copyright: (c) 2012 by Heungsub Lee
 :license: BSD, see LICENSE for more details.
 """
@@ -36,7 +38,7 @@ EPSILON: float = 0.000001
 
 class Rating:
     """
-    Rating in Old Glicko (and Elo) scale.
+    Rating in old Glicko (and Elo) scale.
     Each player has a rating, a rating deviation, and a rating volatility.
     In this code, a rating is "r", a rating deviation is "RD", and a rating volatility is "sigma".
     In the Mark Glickman's paper, "r", "RD", and "σ". https://www.glicko.net/glicko/glicko2.pdf
@@ -56,7 +58,7 @@ class Rating:
     def __repr__(self) -> str:
         c = type(self)
         args = (c.__module__, c.__name__, self.r, self.RD, self.sigma)
-        return "%s.%s(mu=%.3f, phi=%.3f, sigma=%.3f)" % args
+        return "%s.%s(r=%.3f, RD=%.3f, sigma=%.3f)" % args
 
 
 class RatingInGlicko2:
@@ -72,6 +74,9 @@ class RatingInGlicko2:
         self.mu = mu
         self.phi = phi
         self.sigma = sigma
+
+    def __repr__(self) -> str:
+        return f"{self.__class__.__name__}(mu={self.mu}, phi={self.phi}, sigma={self.sigma})"
 
 
 class Glicko2(object):
