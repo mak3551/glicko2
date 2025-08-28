@@ -118,7 +118,7 @@ class Glicko2(object):
         """
         return 1.0 / math.sqrt(1 + (3 * rating.phi**2) / (math.pi**2))
 
-    def expect_score(
+    def expect_score_in_glicko2(
         self, rating: RatingInGlicko2, other_rating: RatingInGlicko2, impact: float
     ) -> float:
         """
@@ -207,7 +207,7 @@ class Glicko2(object):
             # "impact" is g(φ).
             impact = self.reduce_impact(other_rating_in_glicko2)
             # "expected_score" is E(μ, μj, φj).
-            expected_score = self.expect_score(
+            expected_score = self.expect_score_in_glicko2(
                 rating_in_glicko2, other_rating_in_glicko2, impact
             )
             variance_inv += impact**2 * expected_score * (1 - expected_score)
@@ -237,11 +237,23 @@ class Glicko2(object):
         )
 
     def quality_1vs1(self, rating1: RatingInGlicko2, rating2: RatingInGlicko2) -> float:
-        expected_score1 = self.expect_score(
+        expected_score1 = self.expect_score_in_glicko2(
             rating1, rating2, self.reduce_impact(rating1)
         )
-        expected_score2 = self.expect_score(
+        expected_score2 = self.expect_score_in_glicko2(
             rating2, rating1, self.reduce_impact(rating2)
         )
         expected_score = (expected_score1 + expected_score2) / 2
         return 2 * (0.5 - abs(0.5 - expected_score))
+
+    def expect_score(self, rating1: Rating, rating2: Rating) -> float:
+        """
+        calculates probablity (rating1 win).
+        """
+        rating1_glicko2: RatingInGlicko2 = self.scale_down(rating1)
+        rating2_glicko2: RatingInGlicko2 = self.scale_down(rating2)
+        impact: float = self.reduce_impact(rating2_glicko2)
+        expectation: float = self.expect_score_in_glicko2(
+            rating1_glicko2, rating2_glicko2, impact
+        )
+        return expectation

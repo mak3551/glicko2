@@ -41,3 +41,6 @@ def test_glickman_example() -> None:
     assert almost(rated).almost_equals_rating(
         env.create_rating(1464.051, 151.515, 0.05999)
     )
+    assert math.fabs(env.expect_score(r1, r2) - 0.639) < 0.002
+    assert math.fabs(env.expect_score(r1, r3) - 0.432) < 0.002
+    assert math.fabs(env.expect_score(r1, r4) - 0.303) < 0.002
