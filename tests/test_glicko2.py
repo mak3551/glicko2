@@ -22,11 +22,33 @@ def test_glickman_example() -> None:
     r2 = env.create_rating(1400, 30)
     r3 = env.create_rating(1550, 100)
     r4 = env.create_rating(1700, 300)
-    rated: Rating = env.rate(r1, [(WIN, r2), (LOSS, r3), (LOSS, r4)])
 
-    assert assess_value(rated.r, 1464.051)
-    assert assess_value(rated.RD, 151.515)
-    assert assess_value(rated.sigma, 0.05999)
     assert assess_value(env.expect_score(r1, r2), 0.639)
     assert assess_value(env.expect_score(r1, r3), 0.432)
     assert assess_value(env.expect_score(r1, r4), 0.303)
+
+    rated: Rating = env.rate(r1, [(WIN, r2), (LOSS, r3), (LOSS, r4)])
+    assert assess_value(rated.r, 1464.051)
+    assert assess_value(rated.RD, 151.515)
+    assert assess_value(rated.sigma, 0.05999)
+
+
+def test_glicko2() -> None:
+    """
+    This test executes example I made.
+    """
+    env: Glicko2 = Glicko2(tau=1.1)
+    r1 = env.create_rating(1200, 40, 0.08)
+    r2 = env.create_rating(1700, 100)
+    r3 = env.create_rating(1600, 50)
+    r4 = env.create_rating(1800, 200)
+    assert assess_value(env.expect_score(r1, r2), 0.06046)
+    assert assess_value(env.expect_score(r1, r3), 0.09328)
+    assert assess_value(env.expect_score(r1, r4), 0.05136)
+
+    r1_new: Rating = env.rate(
+        r1, [(WIN, r2), (WIN, r2), (WIN, r3), (WIN, r4), (LOSS, r4)]
+    )
+    assert assess_value(r1_new.r, 1235.193)
+    assert assess_value(r1_new.RD, 42.132)
+    assert assess_value(r1_new.sigma, 0.082)
