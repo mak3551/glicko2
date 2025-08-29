@@ -6,6 +6,11 @@ readme = "README.md"
 requires-python = ">=3.10"
 dependencies = []
 
+[project.optional-dependencies]
+option-dependencies = [
+    "numpy>=2.2.6",
+]
+
 [dependency-groups]
 dev = [
     "mypy>=1.17.1",
