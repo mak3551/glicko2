@@ -3,7 +3,7 @@ from glicko2.glicko2 import Glicko2, WIN, LOSS, Rating
 import math
 
 
-ALLOWABLE: float = 0.005
+ALLOWABLE: float = 0.001
 
 
 def assess_value(value: float, ref: float) -> bool:
@@ -29,7 +29,7 @@ def test_glickman_example() -> None:
 
     rated: Rating = env.rate(r1, [(WIN, r2), (LOSS, r3), (LOSS, r4)])
     assert assess_value(rated.r, 1464.051)
-    assert assess_value(rated.RD, 151.515)
+    assert assess_value(rated.RD, 151.516)
     assert assess_value(rated.sigma, 0.05999)
 
 
