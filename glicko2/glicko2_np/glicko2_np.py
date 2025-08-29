@@ -16,85 +16,11 @@ import numpy.typing as ntp
 
 import math
 
-__version__ = "0.0.dev"
-
-#: The actual score for win
-WIN: float = 1.0
-#: The actual score for draw
-DRAW: float = 0.5
-#: The actual score for loss
-LOSS: float = 0.0
-
-# If the player is unrated, these values are set.
-R_INITIAL: float = 1500
-RD_INITIAL: float = 350
-SIGMA_INITIAL: float = 0.06
-
-# In the Mark Glickman's paper,it is "τ" (in Step 1). It constrains the change in volatility over time.
-# He says reasonable choices are between 0.3 and 1.2,
-# though the system should be tested to decide which value results in greatest predictive accuracy.
-# Smaller values of τ prevent the volatility measures from changing by large amounts.
-TAU: float = 1.0
-
-# convergence tolerance, ε (used in Step 5).
-EPSILON: float = 0.000001
+from glicko2 import Rating, WIN, LOSS, DRAW
+from glicko2.glicko2 import RatingInGlicko2, RD_INITIAL, SIGMA_INITIAL, TAU, EPSILON
 
 
-class Rating:
-    """
-    Rating in old Glicko (and Elo) scale.
-    Each player has a rating, a rating deviation, and a rating volatility.
-    In this code, a rating is "r", a rating deviation is "RD", and a rating volatility is "sigma".
-    In the Mark Glickman's paper, "r", "RD", and "σ". https://www.glicko.net/glicko/glicko2.pdf
-    """
-
-    r: float
-    RD: float
-    sigma: float
-
-    def __init__(
-        self, r: float = R_INITIAL, RD: float = RD_INITIAL, sigma: float = SIGMA_INITIAL
-    ):
-        self.r = r
-        self.RD = RD
-        self.sigma = sigma
-
-    def __repr__(self) -> str:
-        c = type(self)
-        args = (c.__module__, c.__name__, self.r, self.RD, self.sigma)
-        return "%s.%s(r=%.3f, RD=%.3f, sigma=%.3f)" % args
-
-    def __eq__(self, other: object) -> bool:
-        if not isinstance(other, Rating):
-            return NotImplemented
-        return self.r == other.r and self.RD == other.RD and self.sigma == other.sigma
-
-    def _flatter(self) -> list[float]:
-        """
-        convert this object to list.
-        """
-        return [self.r, self.RD, self.sigma]
-
-
-class RatingInGlicko2:
-    """
-    Rating in Glicko-2 scale.
-    """
-
-    mu: float
-    phi: float
-    sigma: float
-
-    def __init__(self, mu: float, phi: float, sigma: float):
-        self.mu = mu
-        self.phi = phi
-        self.sigma = sigma
-
-    def __repr__(self) -> str:
-        return f"{self.__class__.__name__}(mu={self.mu}, phi={self.phi}, sigma={self.sigma})"
-
-
-class Glicko2(object):
+class Glicko2_np(object):
     tau: float
 
     def __init__(self, tau: float = TAU):
@@ -116,6 +42,20 @@ class Glicko2(object):
         phi: float = rating.RD / ratio
         return RatingInGlicko2(mu, phi, rating.sigma)
 
+    def _scale_down_ndarray(
+        self,
+        series_ndarray: ntp.NDArray[np.float64],
+        ratio: float = 173.7178,
+        ref_r: float = 1500,
+    ) -> None:
+        """
+        destractive function.
+        This function converts series_ndarray from traditional scale to Glicko2's scale.
+        """
+        series_ndarray[:, 1] = (series_ndarray[:, 1] - ref_r) / ratio
+        series_ndarray[:, 2] = series_ndarray[:, 2] / ratio
+        return None
+
     def scale_up(
         self, rating: RatingInGlicko2, ratio: float = 173.7178, ref_r: float = 1500
     ) -> Rating:
@@ -134,6 +74,11 @@ class Glicko2(object):
         """
         return 1.0 / math.sqrt(1 + (3 * rating.phi**2) / (math.pi**2))
 
+    def _reduce_impact_ndarray(
+        self, phi_ndarray: ntp.NDArray[np.float64]
+    ) -> ntp.NDArray[np.float64]:
+        return 1.0 / np.sqrt(1.0 + (3.0 * (phi_ndarray**2)) / (np.pi**2))
+
     def expect_score_in_glicko2(
         self, rating: RatingInGlicko2, other_rating: RatingInGlicko2, impact: float
     ) -> float:
@@ -142,6 +87,15 @@ class Glicko2(object):
         It calculates expected outcome of a game.
         """
         return 1.0 / (1 + math.exp(-impact * (rating.mu - other_rating.mu)))
+
+    def _expect_score_in_glicko2_ndarray(
+        self,
+        mu: float,
+        mu_opponents_ndarray: ntp.NDArray[np.float64],
+        phi_ndarray: ntp.NDArray[np.float64],
+        impact_ndarray: ntp.NDArray[np.float64],
+    ) -> ntp.NDArray[np.float64]:
+        return 1.0 / (1 + np.exp((-1.0) * impact_ndarray * (mu - mu_opponents_ndarray)))
 
     def determine_sigma(
         self, rating: RatingInGlicko2, difference: float, variance: float
@@ -205,17 +159,10 @@ class Glicko2(object):
         In the Mark Glickman's paper, he says Glicko-2 works best when the number of games in a rating period is moderate to large,
         say an average of at least 10-15 games per player in a rating period.
         """
-
+        series_ndarray = self._convert_series_to_ndarray(series)
         # Step 2. For each player, convert the rating and RD's onto the
         #         Glicko-2 scale.
         rating_in_glicko2: RatingInGlicko2 = self.scale_down(rating)
-        # Step 3. Compute the quantity v. This is the estimated variance of the
-        #         team's/player's rating based only on game outcomes.
-        # Step 4. Compute the quantity difference, the estimated improvement in
-        #         rating by comparing the pre-period rating to the performance
-        #         rating based only on game outcomes.
-        variance_inv: float = 0.0
-        difference: float = 0.0
         if not series:
             # If the team didn't play in the series, do only Step 6
             phi_star: float = math.sqrt(
@@ -224,20 +171,36 @@ class Glicko2(object):
             return self.scale_up(
                 RatingInGlicko2(rating_in_glicko2.mu, phi_star, rating.sigma)
             )
-        for actual_score, other_rating in series:
-            other_rating_in_glicko2: RatingInGlicko2 = self.scale_down(other_rating)
-            # "impact" is g(φ).
-            impact = self.reduce_impact(other_rating_in_glicko2)
-            # "expected_score" is E(μ, μj, φj).
-            expected_score = self.expect_score_in_glicko2(
-                rating_in_glicko2, other_rating_in_glicko2, impact
+        series_ndarray = self._convert_series_to_ndarray(series)
+        self._scale_down_ndarray(series_ndarray)
+        # Step 3. Compute the quantity v. This is the estimated variance of the
+        #         team's/player's rating based only on game outcomes.
+        # Step 4. Compute the quantity difference, the estimated improvement in
+        #         rating by comparing the pre-period rating to the performance
+        #         rating based only on game outcomes.
+
+        # "impact_ndarray" is g(φ).
+        impact_ndarray: ntp.NDArray[np.float64] = self._reduce_impact_ndarray(
+            series_ndarray[:, 2]
+        )
+        # "expected_score_ndarray" is E(μ, μj, φj).
+        expect_score_ndarray: ntp.NDArray[np.float64] = (
+            self._expect_score_in_glicko2_ndarray(
+                rating_in_glicko2.mu,
+                series_ndarray[:, 1],
+                series_ndarray[:, 2],
+                impact_ndarray,
             )
-            variance_inv += impact**2 * expected_score * (1 - expected_score)
-            difference += impact * (actual_score - expected_score)
-        # The value of "difference" is the quantity ∆ (Step 4).
-        difference /= variance_inv
+        )
         # The value of "variance" is the quantity v (Step 3).
-        variance: float = 1.0 / variance_inv
+        variance: np.float64 = 1.0 / np.sum(
+            (impact_ndarray**2) * expect_score_ndarray * (1 - expect_score_ndarray)
+        )
+        # The value of "difference" is the quantity ∆ (Step 4).
+        difference: np.float64 = variance * np.sum(
+            impact_ndarray * (series_ndarray[:, 0] - expect_score_ndarray)
+        )
+
         # Step 5. Determine the new value, Sigma', ot the sigma. This
         #         computation requires iteration.
         sigma: float = self.determine_sigma(rating_in_glicko2, difference, variance)
