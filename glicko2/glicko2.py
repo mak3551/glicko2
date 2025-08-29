@@ -66,6 +66,12 @@ class Rating:
             return NotImplemented
         return self.r == other.r and self.RD == other.RD and self.sigma == other.sigma
 
+    def _flatter(self) -> list[float]:
+        """
+        convert this object to list.
+        """
+        return [self.r, self.RD, self.sigma]
+
 
 class RatingInGlicko2:
     """
