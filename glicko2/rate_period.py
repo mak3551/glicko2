@@ -1,5 +1,4 @@
-from glicko2.player import Player
-from glicko2.glicko2 import Rating, Glicko2
+from glicko2 import Player, Rating, Glicko2
 from datetime import date
 
 

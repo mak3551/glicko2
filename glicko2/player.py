@@ -1,4 +1,4 @@
-from glicko2 import glicko2
+import glicko2
 from datetime import date
 
 

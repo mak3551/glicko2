@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from glicko2.glicko2 import Glicko2, WIN, LOSS, Rating
+from glicko2 import Glicko2, WIN, LOSS, Rating
 import math
 
 

@@ -1,6 +1,5 @@
-from glicko2.rate_period import rate_period, _get_series_of_player
-from glicko2.glicko2 import WIN, LOSS, DRAW, Glicko2, Rating
-from glicko2.player import Player
+from glicko2 import rate_period, WIN, LOSS, DRAW, Glicko2, Rating, Player
+from glicko2.rate_period import _get_series_of_player
 from datetime import date
 import math
 import pytest
