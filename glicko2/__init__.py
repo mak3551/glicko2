@@ -1,5 +1,11 @@
+import contextlib
+
 from .glicko2 import DRAW, LOSS, WIN, Glicko2, Rating
-from .glicko2_np.glicko2_np import Glicko2Np
+
+# numpy is optional, so if importerror occurred it would be ignored
+with contextlib.suppress(ImportError):
+    from .glicko2_np.glicko2_np import Glicko2Np
+
 from .player import Player
 from .rate_period import rate_period
 
