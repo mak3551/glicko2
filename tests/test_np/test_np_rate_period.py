@@ -1,11 +1,8 @@
 import math
 from datetime import date
 
-import pytest
-
 from glicko2 import DRAW, LOSS, WIN, Player, Rating, rate_period
 from glicko2.glicko2_np.glicko2_np import Glicko2Np
-from glicko2.rate_period import _get_series_of_player
 
 # allowable error (because sometimes float calculation is slightly incorrect)
 ALLOWABLE: float = 0.001
@@ -16,36 +13,6 @@ def assess_value(value: float, ref: float) -> bool:
     It assesses if result value almost equals to reference value.
     """
     return math.fabs(value - ref) < ALLOWABLE
-
-
-def test_get_series_of_player() -> None:
-    p_a: Player = Player(1)
-    p_b: Player = Player(2)
-    p_c: Player = Player(3)
-    p_d: Player = Player(4)
-    matches: list[tuple[Player, Player, float]] = [
-        (p_a, p_b, WIN),
-        (p_a, p_c, LOSS),
-        (p_c, p_d, WIN),
-        (p_d, p_a, DRAW),
-    ]
-    assert _get_series_of_player(matches, p_a) == [
-        (WIN, p_b.rating),
-        (LOSS, p_c.rating),
-        (DRAW, p_d.rating),
-    ]
-    assert _get_series_of_player(matches, p_b) == [(LOSS, p_a.rating)]
-    assert _get_series_of_player(matches, p_c) == [(WIN, p_a.rating), (WIN, p_d.rating)]
-    assert _get_series_of_player(matches, p_d) == [
-        (LOSS, p_c.rating),
-        (DRAW, p_a.rating),
-    ]
-    invalid_matches: list[tuple[Player, Player, float]] = [
-        (p_a, p_c, WIN),
-        (p_b, p_b, WIN),
-    ]
-    with pytest.raises(RuntimeError):
-        _get_series_of_player(invalid_matches, p_b)
 
 
 def test_rate_period() -> None:
