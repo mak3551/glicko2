@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 glicko2
 ~~~~~~~
@@ -41,36 +40,32 @@ class Rating:
     """
     Rating in old Glicko (and Elo) scale.
     Each player has a rating, a rating deviation, and a rating volatility.
-    In this code, a rating is "r", a rating deviation is "RD", and a rating volatility is "sigma".
+    In this code, a rating is "r", a rating deviation is "rd", and a rating volatility is "sigma".
     In the Mark Glickman's paper, "r", "RD", and "σ". https://www.glicko.net/glicko/glicko2.pdf
     """
 
     r: float
-    RD: float
+    rd: float
     sigma: float
 
-    def __init__(
-        self, r: float = R_INITIAL, RD: float = RD_INITIAL, sigma: float = SIGMA_INITIAL
-    ):
+    def __init__(self, r: float = R_INITIAL, rd: float = RD_INITIAL, sigma: float = SIGMA_INITIAL):
         self.r = r
-        self.RD = RD
+        self.rd = rd
         self.sigma = sigma
 
     def __repr__(self) -> str:
-        c = type(self)
-        args = (c.__module__, c.__name__, self.r, self.RD, self.sigma)
-        return "%s.%s(r=%.3f, RD=%.3f, sigma=%.3f)" % args
+        return f"{self.__class__.__name__}(r={self.r}, rd={self.rd}, sigma={self.sigma})"
 
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, Rating):
             return NotImplemented
-        return self.r == other.r and self.RD == other.RD and self.sigma == other.sigma
+        return self.r == other.r and self.rd == other.rd and self.sigma == other.sigma
 
     def _flatter(self) -> list[float]:
         """
         convert this object to list.
         """
-        return [self.r, self.RD, self.sigma]
+        return [self.r, self.rd, self.sigma]
 
 
 class RatingInGlicko2:
@@ -91,37 +86,31 @@ class RatingInGlicko2:
         return f"{self.__class__.__name__}(mu={self.mu}, phi={self.phi}, sigma={self.sigma})"
 
 
-class Glicko2(object):
+class Glicko2:
     tau: float
 
     def __init__(self, tau: float = TAU):
         self.tau = tau
 
-    def create_rating(
-        self, r: float, RD: float = RD_INITIAL, sigma: float = SIGMA_INITIAL
-    ) -> Rating:
-        return Rating(r, RD, sigma)
+    def create_rating(self, r: float, rd: float = RD_INITIAL, sigma: float = SIGMA_INITIAL) -> Rating:
+        return Rating(r, rd, sigma)
 
-    def scale_down(
-        self, rating: Rating, ratio: float = 173.7178, ref_r: float = 1500
-    ) -> RatingInGlicko2:
+    def scale_down(self, rating: Rating, ratio: float = 173.7178, ref_r: float = 1500) -> RatingInGlicko2:
         """
         In the Mark Glickman's paper, he says the rating scale for Glicko-2 is different from that of Original Glicko (and Elo).
         This function converts rating and RD from old-style to Glicko-2's scale (Step 2 in the paper).
         """
         mu: float = (rating.r - ref_r) / ratio
-        phi: float = rating.RD / ratio
+        phi: float = rating.rd / ratio
         return RatingInGlicko2(mu, phi, rating.sigma)
 
-    def scale_up(
-        self, rating: RatingInGlicko2, ratio: float = 173.7178, ref_r: float = 1500
-    ) -> Rating:
+    def scale_up(self, rating: RatingInGlicko2, ratio: float = 173.7178, ref_r: float = 1500) -> Rating:
         """
         This function converts rating and RD from Glicko-2 to old-style.
         """
         r: float = rating.mu * ratio + ref_r
-        RD: float = rating.phi * ratio
-        return Rating(r, RD, rating.sigma)
+        rd: float = rating.phi * ratio
+        return Rating(r, rd, rating.sigma)
 
     def reduce_impact(self, rating: RatingInGlicko2) -> float:
         """
@@ -131,18 +120,14 @@ class Glicko2(object):
         """
         return 1.0 / math.sqrt(1 + (3 * rating.phi**2) / (math.pi**2))
 
-    def expect_score_in_glicko2(
-        self, rating: RatingInGlicko2, other_rating: RatingInGlicko2, impact: float
-    ) -> float:
+    def expect_score_in_glicko2(self, rating: RatingInGlicko2, other_rating: RatingInGlicko2, impact: float) -> float:
         """
         E(μ,μj,φj)
         It calculates expected outcome of a game.
         """
         return 1.0 / (1 + math.exp(-impact * (rating.mu - other_rating.mu)))
 
-    def determine_sigma(
-        self, rating: RatingInGlicko2, difference: float, variance: float
-    ) -> float:
+    def determine_sigma(self, rating: RatingInGlicko2, difference: float, variance: float) -> float:
         """Determines new sigma. (Step 5)"""
         phi: float = rating.phi
         difference_squared: float = difference**2
@@ -210,20 +195,14 @@ class Glicko2(object):
         difference: float = 0.0
         if not series:
             # If the team didn't play in the series, do only Step 6
-            phi_star: float = math.sqrt(
-                rating_in_glicko2.phi**2 + rating_in_glicko2.sigma**2
-            )
-            return self.scale_up(
-                RatingInGlicko2(rating_in_glicko2.mu, phi_star, rating.sigma)
-            )
+            phi_star: float = math.sqrt(rating_in_glicko2.phi**2 + rating_in_glicko2.sigma**2)
+            return self.scale_up(RatingInGlicko2(rating_in_glicko2.mu, phi_star, rating.sigma))
         for actual_score, other_rating in series:
             other_rating_in_glicko2: RatingInGlicko2 = self.scale_down(other_rating)
             # "impact" is g(φ).
             impact = self.reduce_impact(other_rating_in_glicko2)
             # "expected_score" is E(μ, μj, φj).
-            expected_score = self.expect_score_in_glicko2(
-                rating_in_glicko2, other_rating_in_glicko2, impact
-            )
+            expected_score = self.expect_score_in_glicko2(rating_in_glicko2, other_rating_in_glicko2, impact)
             variance_inv += impact**2 * expected_score * (1 - expected_score)
             difference += impact * (actual_score - expected_score)
         # The value of "difference" is the quantity ∆ (Step 4).
@@ -242,21 +221,15 @@ class Glicko2(object):
         # Step 8. Convert ratings and RD's back to original scale.
         return self.scale_up(RatingInGlicko2(mu, phi, sigma))
 
-    def rate_1vs1(
-        self, rating1: Rating, rating2: Rating, drawn: bool = False
-    ) -> tuple[Rating, Rating]:
+    def rate_1vs1(self, rating1: Rating, rating2: Rating, drawn: bool = False) -> tuple[Rating, Rating]:
         return (
             self.rate(rating1, [(DRAW if drawn else WIN, rating2)]),
             self.rate(rating2, [(DRAW if drawn else LOSS, rating1)]),
         )
 
     def quality_1vs1(self, rating1: RatingInGlicko2, rating2: RatingInGlicko2) -> float:
-        expected_score1 = self.expect_score_in_glicko2(
-            rating1, rating2, self.reduce_impact(rating1)
-        )
-        expected_score2 = self.expect_score_in_glicko2(
-            rating2, rating1, self.reduce_impact(rating2)
-        )
+        expected_score1 = self.expect_score_in_glicko2(rating1, rating2, self.reduce_impact(rating1))
+        expected_score2 = self.expect_score_in_glicko2(rating2, rating1, self.reduce_impact(rating2))
         expected_score = (expected_score1 + expected_score2) / 2
         return 2 * (0.5 - abs(0.5 - expected_score))
 
@@ -267,7 +240,5 @@ class Glicko2(object):
         rating1_glicko2: RatingInGlicko2 = self.scale_down(rating1)
         rating2_glicko2: RatingInGlicko2 = self.scale_down(rating2)
         impact: float = self.reduce_impact(rating2_glicko2)
-        expectation: float = self.expect_score_in_glicko2(
-            rating1_glicko2, rating2_glicko2, impact
-        )
+        expectation: float = self.expect_score_in_glicko2(rating1_glicko2, rating2_glicko2, impact)
         return expectation

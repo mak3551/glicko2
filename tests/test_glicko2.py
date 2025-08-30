@@ -1,7 +1,6 @@
-# -*- coding: utf-8 -*-
-from glicko2 import Glicko2, WIN, LOSS, Rating
 import math
 
+from glicko2 import LOSS, WIN, Glicko2, Rating
 
 ALLOWABLE: float = 0.001
 
@@ -29,7 +28,7 @@ def test_glickman_example() -> None:
 
     rated: Rating = env.rate(r1, [(WIN, r2), (LOSS, r3), (LOSS, r4)])
     assert assess_value(rated.r, 1464.051)
-    assert assess_value(rated.RD, 151.516)
+    assert assess_value(rated.rd, 151.516)
     assert assess_value(rated.sigma, 0.05999)
 
 
@@ -46,9 +45,7 @@ def test_glicko2() -> None:
     assert assess_value(env.expect_score(r1, r3), 0.09328)
     assert assess_value(env.expect_score(r1, r4), 0.05136)
 
-    r1_new: Rating = env.rate(
-        r1, [(WIN, r2), (WIN, r2), (WIN, r3), (WIN, r4), (LOSS, r4)]
-    )
+    r1_new: Rating = env.rate(r1, [(WIN, r2), (WIN, r2), (WIN, r3), (WIN, r4), (LOSS, r4)])
     assert assess_value(r1_new.r, 1235.193)
-    assert assess_value(r1_new.RD, 42.132)
+    assert assess_value(r1_new.rd, 42.132)
     assert assess_value(r1_new.sigma, 0.082)

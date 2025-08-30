@@ -18,3 +18,44 @@ dev = [
     "pytest>=8.4.1",
     "ruff>=0.12.10",
 ]
+
+[tool.ruff.lint]
+select = [
+    # pycodestyle
+    "E",
+    # pycodestyle warnings
+    "W",
+    # Pyflakes
+    "F",
+    # flake8-builtins
+    "A",
+    # flake8-bugbear
+    "B",
+    # flake8-import-conventions
+    "ICN",
+    # flake8-simplify
+    "SIM",
+    # flake8-comprehensions
+    "C4",
+    # flake8-unused-arguments
+    "ARG",
+    # flake8-pytest-style 
+    "PT",
+    # pyupgrade
+    "UP",
+    # isort
+    "I",
+    # Ruff-specific
+    "RUF",
+    # pylint convention
+    "PLC",
+    # pylint error
+    "PLE",
+    # pep8-naming
+    "N",
+]
+allowed-confusables = ["σ"] # because it is used in formula 
+
+[tool.ruff]
+# Allow lines to be as long as 140.
+line-length = 140

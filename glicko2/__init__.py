@@ -1,15 +1,15 @@
-from .glicko2 import Glicko2, Rating, WIN, DRAW, LOSS
+from .glicko2 import DRAW, LOSS, WIN, Glicko2, Rating
+from .glicko2_np.glicko2_np import Glicko2Np
 from .player import Player
 from .rate_period import rate_period
-from .glicko2_np.glicko2_np import Glicko2_np
 
 __all__ = [
-    "Glicko2",
-    "Rating",
-    "WIN",
     "DRAW",
     "LOSS",
+    "WIN",
+    "Glicko2",
+    "Glicko2Np",
     "Player",
+    "Rating",
     "rate_period",
-    "Glicko2_np",
 ]

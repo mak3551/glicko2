@@ -1,12 +1,13 @@
-from glicko2 import Player, Rating, Glicko2
-from glicko2.glicko2_np.glicko2_np import Glicko2_np
 from datetime import date
+
+from glicko2 import Glicko2, Player, Rating
+from glicko2.glicko2_np.glicko2_np import Glicko2Np
 
 
 def rate_period(
     matches: list[tuple[Player, Player, float]],
     players_list: list[Player],
-    system: Glicko2 | Glicko2_np | None = None,
+    system: Glicko2 | Glicko2Np | None = None,
     match_date: date | None = None,
 ) -> list[Player]:
     """
@@ -30,14 +31,12 @@ def rate_period(
         new_rating_history: list[tuple[date, Rating]] = player.rating_history.copy()
         if match_date is not None:
             new_rating_history.append((match_date, new_rating))
-        new_player: Player = Player(player.id, new_rating, new_rating_history)
+        new_player: Player = Player(player.unique_id, new_rating, new_rating_history)
         new_players_list.append(new_player)
     return new_players_list
 
 
-def _get_series_of_player(
-    matches: list[tuple[Player, Player, float]], player: Player
-) -> list[tuple[float, Rating]]:
+def _get_series_of_player(matches: list[tuple[Player, Player, float]], player: Player) -> list[tuple[float, Rating]]:
     """
     extract player's game series from matches.
     """
@@ -48,7 +47,7 @@ def _get_series_of_player(
         result: float = match[2]
         if player_foemer == player_latter:
             raise RuntimeError("Invalid match detected.")
-        elif player_foemer != player and player_latter != player:
+        elif player not in (player_foemer, player_latter):
             continue
         elif player_foemer == player:
             series.append((result, player_latter.rating))
