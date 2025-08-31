@@ -137,7 +137,7 @@ def calculate_rating_in_rate_period(
     return None
 
 
-def gane_rate_calculate(gamelist: list[tuple[str | date, str, str, float]], per_days: int | timedelta = 90) -> GamePlayerList:
+def game_rate_calculate(gamelist: list[tuple[str | date, str, str, float]], per_days: int | timedelta = 90) -> GamePlayerList:
     """
         argument is a list like this:
         [(date, name_1, name_2, result), (date, name_1, name_2, result), ...]
