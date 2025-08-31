@@ -219,3 +219,6 @@ __marimo__/
 
 #version file of python used by uv
 .python-version
+
+# VSCode
+.vscode
