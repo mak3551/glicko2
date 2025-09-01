@@ -1,7 +1,9 @@
 from datetime import date
 
-from glicko2 import Glicko2, Player, Rating
-from glicko2.glicko2_np.glicko2_np import Glicko2Np
+from .glicko2 import Glicko2
+from .glicko2_np.glicko2_np import Glicko2Np
+from .player import Player
+from .rating import Rating
 
 
 def rate_period(

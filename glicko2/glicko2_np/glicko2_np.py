@@ -15,8 +15,8 @@ import math
 import numpy as np
 import numpy.typing as npt
 
-from glicko2 import DRAW, LOSS, WIN, Rating
-from glicko2.glicko2 import EPSILON, RD_INITIAL, SIGMA_INITIAL, TAU, RatingInGlicko2
+from ..constant_value import DRAW, EPSILON, LOSS, RD_INITIAL, SIGMA_INITIAL, TAU, WIN
+from ..rating import Rating, RatingInGlicko2
 
 
 class Glicko2Np:

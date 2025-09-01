@@ -12,81 +12,14 @@ This code is a fork of https://github.com/sublee/glicko2.
 
 import math
 
+from .constant_value import DRAW, EPSILON, LOSS, RD_INITIAL, SIGMA_INITIAL, TAU, WIN
+from .rating import Rating, RatingInGlicko2
+from .rating_system import RatingSystem
+
 __version__ = "0.0.dev"
 
-#: The actual score for win
-WIN: float = 1.0
-#: The actual score for draw
-DRAW: float = 0.5
-#: The actual score for loss
-LOSS: float = 0.0
 
-# If the player is unrated, these values are set.
-R_INITIAL: float = 1500
-RD_INITIAL: float = 350
-SIGMA_INITIAL: float = 0.06
-
-# In the Mark Glickman's paper,it is "τ" (in Step 1). It constrains the change in volatility over time.
-# He says reasonable choices are between 0.3 and 1.2,
-# though the system should be tested to decide which value results in greatest predictive accuracy.
-# Smaller values of τ prevent the volatility measures from changing by large amounts.
-TAU: float = 1.0
-
-# convergence tolerance, ε (used in Step 5).
-EPSILON: float = 0.000001
-
-
-class Rating:
-    """
-    Rating in old Glicko (and Elo) scale.
-    Each player has a rating, a rating deviation, and a rating volatility.
-    In this code, a rating is "r", a rating deviation is "rd", and a rating volatility is "sigma".
-    In the Mark Glickman's paper, "r", "RD", and "σ". https://www.glicko.net/glicko/glicko2.pdf
-    """
-
-    r: float
-    rd: float
-    sigma: float
-
-    def __init__(self, r: float = R_INITIAL, rd: float = RD_INITIAL, sigma: float = SIGMA_INITIAL):
-        self.r = r
-        self.rd = rd
-        self.sigma = sigma
-
-    def __repr__(self) -> str:
-        return f"{self.__class__.__name__}(r={self.r}, rd={self.rd}, sigma={self.sigma})"
-
-    def __eq__(self, other: object) -> bool:
-        if not isinstance(other, Rating):
-            return NotImplemented
-        return self.r == other.r and self.rd == other.rd and self.sigma == other.sigma
-
-    def _flatter(self) -> list[float]:
-        """
-        convert this object to list.
-        """
-        return [self.r, self.rd, self.sigma]
-
-
-class RatingInGlicko2:
-    """
-    Rating in Glicko-2 scale.
-    """
-
-    mu: float
-    phi: float
-    sigma: float
-
-    def __init__(self, mu: float, phi: float, sigma: float):
-        self.mu = mu
-        self.phi = phi
-        self.sigma = sigma
-
-    def __repr__(self) -> str:
-        return f"{self.__class__.__name__}(mu={self.mu}, phi={self.phi}, sigma={self.sigma})"
-
-
-class Glicko2:
+class Glicko2(RatingSystem):
     tau: float
 
     def __init__(self, tau: float = TAU):

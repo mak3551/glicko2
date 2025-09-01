@@ -1,6 +1,6 @@
 from datetime import date
 
-import glicko2
+from .rating import Rating
 
 
 class Player:
@@ -10,14 +10,14 @@ class Player:
     """
 
     unique_id: int
-    rating: glicko2.Rating
-    rating_history: list[tuple[date, glicko2.Rating]]
+    rating: Rating
+    rating_history: list[tuple[date, Rating]]
 
     def __init__(
         self,
         unique_id: int,
-        rating: glicko2.Rating | None = None,
-        rating_history: list[tuple[date, glicko2.Rating]] | None = None,
+        rating: Rating | None = None,
+        rating_history: list[tuple[date, Rating]] | None = None,
     ):
         """
         arguments:
@@ -27,7 +27,7 @@ class Player:
         """
         self.unique_id = unique_id
         if rating is None:
-            self.rating = glicko2.Rating()
+            self.rating = Rating()
         else:
             self.rating = rating
         if rating_history is None:
