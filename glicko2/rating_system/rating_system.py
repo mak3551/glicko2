@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 
-from .rating import Rating
+from ..game_player.player.rating.rating import Rating
 
 
 class RatingSystem(ABC):

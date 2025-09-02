@@ -1,47 +1,10 @@
-from dataclasses import dataclass
 from datetime import date, timedelta
 
-from glicko2 import Glicko2Np, Player, rate_period
-
-
-@dataclass(slots=True)
-class GamePlayer:
-    name: str
-    player: Player
-    first_mach_date: date
-
-
-class GamePlayerList:
-    list_game_player: list[GamePlayer]
-    next_unique_id: int
-    name_set: set[str]
-    name_player_dict: dict[str, GamePlayer]  # value is GamePlayer object, key is its name.
-    uniqueid_player_dict: dict[int, GamePlayer]  # value is GamePlayer object, key is unique_id.
-
-    def __init__(self) -> None:
-        self.list_game_player = []
-        self.next_unique_id = 1
-        self.name_set = set()
-        self.name_player_dict = {}
-        self.uniqueid_player_dict = {}
-
-    def add_game_player(self, name: str, mach_date: date) -> None:
-        """
-        make GamePlayer object and add it in list_game_player.
-
-        if a name is already registered, skipped.
-        When added, name_set, name_player_dict and uniqueid_player_dict are automatically updated.
-        """
-        if name in self.name_set:
-            return None
-        new_game_player: GamePlayer = GamePlayer(name, Player(self.next_unique_id), mach_date)
-        self.list_game_player.append(new_game_player)
-        self.name_set.add(name)
-        assert name not in self.name_player_dict
-        self.name_player_dict[name] = new_game_player
-        self.uniqueid_player_dict[self.next_unique_id] = new_game_player
-        self.next_unique_id += 1
-        return None
+from .game_player.game_player import GamePlayerList
+from .game_player.player.player import Player
+from .rate_period import rate_period
+from .rating_system.glicko2.glicko2 import Glicko2
+from .rating_system.rating_system import RatingSystem
 
 
 def extract_player_list_from_gamelist(
@@ -112,7 +75,7 @@ def divide_sorted_gamelist(
 
 
 def calculate_rating_in_rate_period(
-    sorted_gamelist_in_rate_period: list[tuple[int, int, float]], player_list: GamePlayerList, system: Glicko2Np, rating_date: date
+    sorted_gamelist_in_rate_period: list[tuple[int, int, float]], player_list: GamePlayerList, system: RatingSystem, rating_date: date
 ) -> None:
     """
     rating_date is start date of **next** rating period.
@@ -146,7 +109,7 @@ def game_rate_calculate(gamelist: list[tuple[str | date, str, str, float]], per_
     result is float. if name_1 wins, result is 1.0. If name_1 loses, result is 0.0.
     If draw, result is 0.5.
     """
-    rating_system: Glicko2Np = Glicko2Np()
+    rating_system: RatingSystem = Glicko2()
     sorted_gamelist, player_list = extract_player_list_from_gamelist(gamelist)
     divided_gamelist = divide_sorted_gamelist(sorted_gamelist, player_list, per_days)
     for game_rate_period in divided_gamelist:

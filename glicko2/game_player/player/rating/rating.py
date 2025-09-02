@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 
-from .constant_value import R_INITIAL, RD_INITIAL, SIGMA_INITIAL
+from ....constant_value import R_INITIAL, RD_INITIAL, SIGMA_INITIAL
 
 
 @dataclass(slots=True)
@@ -15,12 +15,6 @@ class Rating:
     r: float = R_INITIAL
     rd: float = RD_INITIAL
     sigma: float = SIGMA_INITIAL
-
-    def _flatter(self) -> list[float]:
-        """
-        convert this object to list.
-        """
-        return [self.r, self.rd, self.sigma]
 
 
 @dataclass(slots=True)

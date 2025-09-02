@@ -15,11 +15,12 @@ import math
 import numpy as np
 import numpy.typing as npt
 
-from ..constant_value import DRAW, EPSILON, LOSS, RD_INITIAL, SIGMA_INITIAL, TAU, WIN
-from ..rating import Rating, RatingInGlicko2
+from ...constant_value import DRAW, EPSILON, LOSS, RD_INITIAL, SIGMA_INITIAL, TAU, WIN
+from ...game_player.player.rating.rating import Rating, RatingInGlicko2
+from ..rating_system import RatingSystem
 
 
-class Glicko2Np:
+class Glicko2Np(RatingSystem):
     tau: float
 
     def __init__(self, tau: float = TAU):

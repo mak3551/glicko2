@@ -1,8 +1,7 @@
 import math
 from datetime import date
 
-from glicko2 import DRAW, LOSS, WIN, Player, Rating, rate_period
-from glicko2.glicko2_np.glicko2_np import Glicko2Np
+from glicko2 import DRAW, LOSS, WIN, Glicko2Np, Player, Rating, rate_period
 
 # allowable error (because sometimes float calculation is slightly incorrect)
 ALLOWABLE: float = 0.001

@@ -2,7 +2,7 @@ import csv
 import math
 from datetime import date
 
-from glicko2.game_player import game_rate_calculate
+from glicko2 import game_rate_calculate
 
 SAMPLE_CSV_FILE = "tests/test_game/sample.csv"
 

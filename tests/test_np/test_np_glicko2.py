@@ -1,7 +1,6 @@
 import math
 
-from glicko2 import LOSS, WIN, Rating
-from glicko2.glicko2_np.glicko2_np import Glicko2Np
+from glicko2 import LOSS, WIN, Glicko2Np, Rating
 
 ALLOWABLE: float = 0.001
 

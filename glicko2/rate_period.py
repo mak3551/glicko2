@@ -1,15 +1,15 @@
 from datetime import date
 
-from .glicko2 import Glicko2
-from .glicko2_np.glicko2_np import Glicko2Np
-from .player import Player
-from .rating import Rating
+from .game_player.player.player import Player
+from .game_player.player.rating.rating import Rating
+from .rating_system.glicko2.glicko2 import Glicko2
+from .rating_system.rating_system import RatingSystem
 
 
 def rate_period(
     matches: list[tuple[Player, Player, float]],
     players_list: list[Player],
-    system: Glicko2 | Glicko2Np | None = None,
+    system: RatingSystem | None = None,
     match_date: date | None = None,
 ) -> list[Player]:
     """

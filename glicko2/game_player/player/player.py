@@ -1,6 +1,6 @@
 from datetime import date
 
-from .rating import Rating
+from .rating.rating import Rating
 
 
 class Player:
