@@ -17,10 +17,10 @@ def test_glickman_example() -> None:
     This test uses example calculation in Mark Glickman's paper. https://www.glicko.net/glicko/glicko2.pdf
     """
     env: Glicko2 = Glicko2(tau=0.5)
-    r1 = env.create_rating(1500, 200, 0.06)
-    r2 = env.create_rating(1400, 30)
-    r3 = env.create_rating(1550, 100)
-    r4 = env.create_rating(1700, 300)
+    r1 = env._create_rating(1500, 200, 0.06)
+    r2 = env._create_rating(1400, 30)
+    r3 = env._create_rating(1550, 100)
+    r4 = env._create_rating(1700, 300)
 
     assert assess_value(env.expect_score(r1, r2), 0.639)
     assert assess_value(env.expect_score(r1, r3), 0.432)
@@ -37,10 +37,10 @@ def test_glicko2() -> None:
     This test executes example I made.
     """
     env: Glicko2 = Glicko2(tau=1.1)
-    r1 = env.create_rating(1200, 40, 0.08)
-    r2 = env.create_rating(1700, 100)
-    r3 = env.create_rating(1600, 50)
-    r4 = env.create_rating(1800, 200)
+    r1 = env._create_rating(1200, 40, 0.08)
+    r2 = env._create_rating(1700, 100)
+    r3 = env._create_rating(1600, 50)
+    r4 = env._create_rating(1800, 200)
     assert assess_value(env.expect_score(r1, r2), 0.06046)
     assert assess_value(env.expect_score(r1, r3), 0.09328)
     assert assess_value(env.expect_score(r1, r4), 0.05136)

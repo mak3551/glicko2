@@ -7,7 +7,7 @@ from .rating_system.glicko2.glicko2 import Glicko2
 from .rating_system.rating_system import RatingSystem
 
 
-def extract_player_list_from_gamelist(
+def _extract_player_list_from_gamelist(
     gamelist: list[tuple[str | date, str, str, float]],
 ) -> tuple[list[tuple[str | date, str, str, float]], GamePlayerList]:
     """
@@ -34,7 +34,7 @@ def extract_player_list_from_gamelist(
     return sorted_gamelist, playerlist
 
 
-def divide_sorted_gamelist(
+def _divide_sorted_gamelist(
     sorted_gamelist: list[tuple[date | str, str, str, float]], player_list: GamePlayerList, days: timedelta | int
 ) -> list[tuple[list[tuple[int, int, float]], date]]:
     """
@@ -110,8 +110,8 @@ def game_rate_calculate(gamelist: list[tuple[str | date, str, str, float]], per_
     If draw, result is 0.5.
     """
     rating_system: RatingSystem = Glicko2()
-    sorted_gamelist, player_list = extract_player_list_from_gamelist(gamelist)
-    divided_gamelist = divide_sorted_gamelist(sorted_gamelist, player_list, per_days)
+    sorted_gamelist, player_list = _extract_player_list_from_gamelist(gamelist)
+    divided_gamelist = _divide_sorted_gamelist(sorted_gamelist, player_list, per_days)
     for game_rate_period in divided_gamelist:
         gamelist_in_period: list[tuple[int, int, float]] = game_rate_period[0]
         rating_date: date = game_rate_period[1]

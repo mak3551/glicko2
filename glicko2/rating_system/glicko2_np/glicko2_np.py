@@ -26,10 +26,10 @@ class Glicko2Np(RatingSystem):
     def __init__(self, tau: float = TAU):
         self.tau = tau
 
-    def create_rating(self, r: float, rd: float = RD_INITIAL, sigma: float = SIGMA_INITIAL) -> Rating:
+    def _create_rating(self, r: float, rd: float = RD_INITIAL, sigma: float = SIGMA_INITIAL) -> Rating:
         return Rating(r, rd, sigma)
 
-    def scale_down(self, rating: Rating, ratio: float = 173.7178, ref_r: float = 1500) -> RatingInGlicko2:
+    def _scale_down(self, rating: Rating, ratio: float = 173.7178, ref_r: float = 1500) -> RatingInGlicko2:
         """
         In the Mark Glickman's paper, he says the rating scale for Glicko-2 is different from that of Original Glicko (and Elo).
         This function converts rating and RD from old-style to Glicko-2's scale (Step 2 in the paper).
@@ -51,7 +51,7 @@ class Glicko2Np(RatingSystem):
         series_ndarray[:, 1] = (series_ndarray[:, 1] - ref_r) / ratio
         series_ndarray[:, 2] = series_ndarray[:, 2] / ratio
 
-    def scale_up(self, rating: RatingInGlicko2, ratio: float = 173.7178, ref_r: float = 1500) -> Rating:
+    def _scale_up(self, rating: RatingInGlicko2, ratio: float = 173.7178, ref_r: float = 1500) -> Rating:
         """
         This function converts rating and RD from Glicko-2 to old-style.
         """
@@ -59,7 +59,7 @@ class Glicko2Np(RatingSystem):
         rd: float = rating.phi * ratio
         return Rating(r, rd, rating.sigma)
 
-    def reduce_impact(self, rating: RatingInGlicko2) -> float:
+    def _reduce_impact(self, rating: RatingInGlicko2) -> float:
         """
         g(φ)
         This function reduces the impact of
@@ -70,7 +70,7 @@ class Glicko2Np(RatingSystem):
     def _reduce_impact_ndarray(self, phi_ndarray: npt.NDArray[np.float64]) -> npt.NDArray[np.float64]:
         return 1.0 / np.sqrt(1.0 + (3.0 * (phi_ndarray**2)) / (np.pi**2))
 
-    def expect_score_in_glicko2(self, rating: RatingInGlicko2, other_rating: RatingInGlicko2, impact: float) -> float:
+    def _expect_score_in_glicko2(self, rating: RatingInGlicko2, other_rating: RatingInGlicko2, impact: float) -> float:
         """
         E(μ,μj,φj)
         It calculates expected outcome of a game.
@@ -85,7 +85,7 @@ class Glicko2Np(RatingSystem):
     ) -> npt.NDArray[np.float64]:
         return 1.0 / (1 + np.exp((-1.0) * impact_ndarray * (mu - mu_opponents_ndarray)))
 
-    def determine_sigma(self, rating: RatingInGlicko2, difference: float, variance: float) -> float:
+    def _determine_sigma(self, rating: RatingInGlicko2, difference: float, variance: float) -> float:
         """Determines new sigma. (Step 5)"""
         phi: float = rating.phi
         difference_squared: float = difference**2
@@ -146,11 +146,11 @@ class Glicko2Np(RatingSystem):
         series_ndarray = self._convert_series_to_ndarray(series)
         # Step 2. For each player, convert the rating and RD's onto the
         #         Glicko-2 scale.
-        rating_in_glicko2: RatingInGlicko2 = self.scale_down(rating)
+        rating_in_glicko2: RatingInGlicko2 = self._scale_down(rating)
         if not series:
             # If the team didn't play in the series, do only Step 6
             phi_star: float = math.sqrt(rating_in_glicko2.phi**2 + rating_in_glicko2.sigma**2)
-            return self.scale_up(RatingInGlicko2(rating_in_glicko2.mu, phi_star, rating.sigma))
+            return self._scale_up(RatingInGlicko2(rating_in_glicko2.mu, phi_star, rating.sigma))
         series_ndarray = self._convert_series_to_ndarray(series)
         self._scale_down_ndarray(series_ndarray)
         # Step 3. Compute the quantity v. This is the estimated variance of the
@@ -174,7 +174,7 @@ class Glicko2Np(RatingSystem):
 
         # Step 5. Determine the new value, Sigma', ot the sigma. This
         #         computation requires iteration.
-        sigma: float = self.determine_sigma(rating_in_glicko2, difference, variance)
+        sigma: float = self._determine_sigma(rating_in_glicko2, difference, variance)
         # Step 6. Update the rating deviation to the new pre-rating period
         #         value, Phi*.
         phi_star = math.sqrt(rating_in_glicko2.phi**2 + sigma**2)
@@ -182,17 +182,17 @@ class Glicko2Np(RatingSystem):
         phi: float = 1.0 / math.sqrt(1 / phi_star**2 + 1 / variance)
         mu: float = rating_in_glicko2.mu + phi**2 * (difference / variance)
         # Step 8. Convert ratings and RD's back to original scale.
-        return self.scale_up(RatingInGlicko2(mu, phi, sigma))
+        return self._scale_up(RatingInGlicko2(mu, phi, sigma))
 
-    def rate_1vs1(self, rating1: Rating, rating2: Rating, drawn: bool = False) -> tuple[Rating, Rating]:
+    def _rate_1vs1(self, rating1: Rating, rating2: Rating, drawn: bool = False) -> tuple[Rating, Rating]:
         return (
             self.rate(rating1, [(DRAW if drawn else WIN, rating2)]),
             self.rate(rating2, [(DRAW if drawn else LOSS, rating1)]),
         )
 
-    def quality_1vs1(self, rating1: RatingInGlicko2, rating2: RatingInGlicko2) -> float:
-        expected_score1 = self.expect_score_in_glicko2(rating1, rating2, self.reduce_impact(rating1))
-        expected_score2 = self.expect_score_in_glicko2(rating2, rating1, self.reduce_impact(rating2))
+    def _quality_1vs1(self, rating1: RatingInGlicko2, rating2: RatingInGlicko2) -> float:
+        expected_score1 = self._expect_score_in_glicko2(rating1, rating2, self._reduce_impact(rating1))
+        expected_score2 = self._expect_score_in_glicko2(rating2, rating1, self._reduce_impact(rating2))
         expected_score = (expected_score1 + expected_score2) / 2
         return 2 * (0.5 - abs(0.5 - expected_score))
 
@@ -200,8 +200,8 @@ class Glicko2Np(RatingSystem):
         """
         calculates probablity (rating1 win).
         """
-        rating1_glicko2: RatingInGlicko2 = self.scale_down(rating1)
-        rating2_glicko2: RatingInGlicko2 = self.scale_down(rating2)
-        impact: float = self.reduce_impact(rating2_glicko2)
-        expectation: float = self.expect_score_in_glicko2(rating1_glicko2, rating2_glicko2, impact)
+        rating1_glicko2: RatingInGlicko2 = self._scale_down(rating1)
+        rating2_glicko2: RatingInGlicko2 = self._scale_down(rating2)
+        impact: float = self._reduce_impact(rating2_glicko2)
+        expectation: float = self._expect_score_in_glicko2(rating1_glicko2, rating2_glicko2, impact)
         return expectation
