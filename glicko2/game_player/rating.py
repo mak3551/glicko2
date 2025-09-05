@@ -30,6 +30,9 @@ class Rating:
     rd: float = RD_INITIAL
     sigma: float = SIGMA_INITIAL
 
+    def to_dict(self) -> dict[str, float]:
+        return {"r": self.r, "rd": self.rd, "sigma": self.sigma}
+
 
 def _scale_to_glicko2(rating: Rating) -> RatingInGlicko2:
     """

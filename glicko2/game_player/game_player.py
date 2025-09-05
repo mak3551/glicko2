@@ -1,5 +1,7 @@
+import json
 from dataclasses import dataclass
 from datetime import date
+from typing import Any
 
 from .player import Player
 
@@ -9,6 +11,9 @@ class GamePlayer:
     name: str
     player: Player
     first_mach_date: date
+
+    def to_dict(self) -> dict[str, Any]:
+        return {"name": self.name, "player": self.player.to_dict(), "first_mach_date": self.first_mach_date.isoformat()}
 
 
 class GamePlayerList:
@@ -42,3 +47,15 @@ class GamePlayerList:
         self.uniqueid_player_dict[self.next_unique_id] = new_game_player
         self.next_unique_id += 1
         return None
+
+    def to_dict(self) -> dict[str, Any]:
+        """
+        it ommits internally infomation. Only exports list_game_player.
+        """
+        list_players_for_dict: list[dict[str, Any]] = []
+        for game_player in self.list_game_player:
+            list_players_for_dict.append(game_player.to_dict())
+        return {"list_game_player": list_players_for_dict}
+
+    def dump_json(self) -> str:
+        return json.dumps(self.to_dict())

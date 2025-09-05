@@ -1,13 +1,14 @@
 import csv
+import json
 import math
 from datetime import date
 
 from glicko2 import game_rate_calculate
 
 SAMPLE_CSV_FILE = "tests/test_game/sample.csv"
+SAMPLE_RESULT_JSON_FILE = "tests/test_game/sample_result.json"
 
-
-ALLOWABLE: float = 0.005
+ALLOWABLE: float = 0.001
 
 
 def assess_value(value: float, ref: float) -> bool:
@@ -40,3 +41,6 @@ def test_game_rate_calculate() -> None:
     assert assess_value(check_game_player.player.rating.r, 1411.107)
     assert assess_value(check_game_player.player.rating.rd, 134.601)
     assert assess_value(check_game_player.player.rating.sigma, 0.0599)
+    with open(SAMPLE_RESULT_JSON_FILE) as f:
+        sample_result = json.load(f)
+    assert json.loads(game_player_list.dump_json()) == sample_result

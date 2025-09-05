@@ -1,4 +1,5 @@
 from datetime import date
+from typing import Any
 
 from .rating import Rating
 
@@ -42,3 +43,12 @@ class Player:
 
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}(unique_id={self.unique_id}, rating={self.rating}, rating_history={self.rating_history})"
+
+    def to_dict(self) -> dict[str, Any]:
+        """
+        convert date to isoformat for json dump
+        """
+        rating_history_for_dict: list[Any] = []
+        for rating_date, rating_in_history in self.rating_history:
+            rating_history_for_dict.append({rating_date.isoformat(): rating_in_history.to_dict()})
+        return {"unique_id": self.unique_id, "rating": self.rating.to_dict(), "rating_history": rating_history_for_dict}
