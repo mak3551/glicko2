@@ -16,7 +16,7 @@ import numpy as np
 import numpy.typing as npt
 
 from ...constant_value import DRAW, EPSILON, LOSS, RD_INITIAL, SIGMA_INITIAL, TAU, WIN
-from ...game_player.player.rating.rating import Rating, RatingInGlicko2
+from ...game_player.rating import Rating, RatingInGlicko2
 from ..rating_system import RatingSystem
 
 

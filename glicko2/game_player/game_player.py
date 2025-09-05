@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from datetime import date
 
-from .player.player import Player
+from .player import Player
 
 
 @dataclass(slots=True)

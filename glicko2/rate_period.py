@@ -1,7 +1,7 @@
 from datetime import date
 
-from .game_player.player.player import Player
-from .game_player.player.rating.rating import Rating
+from .game_player.player import Player
+from .game_player.rating import Rating
 from .rating_system.glicko2.glicko2 import Glicko2
 from .rating_system.rating_system import RatingSystem
 

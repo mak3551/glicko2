@@ -1,7 +1,7 @@
 from datetime import date, timedelta
 
 from .game_player.game_player import GamePlayerList
-from .game_player.player.player import Player
+from .game_player.player import Player
 from .rate_period import rate_period
 from .rating_system.glicko2.glicko2 import Glicko2
 from .rating_system.rating_system import RatingSystem

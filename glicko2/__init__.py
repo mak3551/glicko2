@@ -1,6 +1,6 @@
 from .constant_value import DRAW, LOSS, WIN
-from .game_player.player.player import Player
-from .game_player.player.rating.rating import Rating
+from .game_player.player import Player
+from .game_player.rating import Rating
 from .game_rate_calculate import game_rate_calculate
 from .rate_period import rate_period
 from .rating_system.glicko2.glicko2 import Glicko2
