@@ -13,7 +13,7 @@ This code is a fork of https://github.com/sublee/glicko2.
 import math
 
 from ...constant_value import DRAW, EPSILON, LOSS, RD_INITIAL, SIGMA_INITIAL, TAU, WIN
-from ...game_player.rating import Rating, RatingInGlicko2
+from ...game_player.rating import Rating, RatingInGlicko2, _scale_to_glicko2, _scale_to_oldstyle
 from ..rating_system import RatingSystem
 
 
@@ -25,23 +25,6 @@ class Glicko2(RatingSystem):
 
     def _create_rating(self, r: float, rd: float = RD_INITIAL, sigma: float = SIGMA_INITIAL) -> Rating:
         return Rating(r, rd, sigma)
-
-    def _scale_down(self, rating: Rating, ratio: float = 173.7178, ref_r: float = 1500) -> RatingInGlicko2:
-        """
-        In the Mark Glickman's paper, he says the rating scale for Glicko-2 is different from that of Original Glicko (and Elo).
-        This function converts rating and RD from old-style to Glicko-2's scale (Step 2 in the paper).
-        """
-        mu: float = (rating.r - ref_r) / ratio
-        phi: float = rating.rd / ratio
-        return RatingInGlicko2(mu, phi, rating.sigma)
-
-    def _scale_up(self, rating: RatingInGlicko2, ratio: float = 173.7178, ref_r: float = 1500) -> Rating:
-        """
-        This function converts rating and RD from Glicko-2 to old-style.
-        """
-        r: float = rating.mu * ratio + ref_r
-        rd: float = rating.phi * ratio
-        return Rating(r, rd, rating.sigma)
 
     def _reduce_impact(self, rating: RatingInGlicko2) -> float:
         """
@@ -116,7 +99,7 @@ class Glicko2(RatingSystem):
 
         # Step 2. For each player, convert the rating and RD's onto the
         #         Glicko-2 scale.
-        rating_in_glicko2: RatingInGlicko2 = self._scale_down(rating)
+        rating_in_glicko2: RatingInGlicko2 = _scale_to_glicko2(rating)
         # Step 3. Compute the quantity v. This is the estimated variance of the
         #         team's/player's rating based only on game outcomes.
         # Step 4. Compute the quantity difference, the estimated improvement in
@@ -127,9 +110,9 @@ class Glicko2(RatingSystem):
         if not series:
             # If the team didn't play in the series, do only Step 6
             phi_star: float = math.sqrt(rating_in_glicko2.phi**2 + rating_in_glicko2.sigma**2)
-            return self._scale_up(RatingInGlicko2(rating_in_glicko2.mu, phi_star, rating.sigma))
+            return _scale_to_oldstyle(RatingInGlicko2(rating_in_glicko2.mu, phi_star, rating.sigma))
         for actual_score, other_rating in series:
-            other_rating_in_glicko2: RatingInGlicko2 = self._scale_down(other_rating)
+            other_rating_in_glicko2: RatingInGlicko2 = _scale_to_glicko2(other_rating)
             # "impact" is g(φ).
             impact = self._reduce_impact(other_rating_in_glicko2)
             # "expected_score" is E(μ, μj, φj).
@@ -150,7 +133,7 @@ class Glicko2(RatingSystem):
         phi: float = 1.0 / math.sqrt(1 / phi_star**2 + 1 / variance)
         mu: float = rating_in_glicko2.mu + phi**2 * (difference / variance)
         # Step 8. Convert ratings and RD's back to original scale.
-        return self._scale_up(RatingInGlicko2(mu, phi, sigma))
+        return _scale_to_oldstyle(RatingInGlicko2(mu, phi, sigma))
 
     def _rate_1vs1(self, rating1: Rating, rating2: Rating, drawn: bool = False) -> tuple[Rating, Rating]:
         return (
@@ -168,8 +151,8 @@ class Glicko2(RatingSystem):
         """
         calculates probablity (rating1 win).
         """
-        rating1_glicko2: RatingInGlicko2 = self._scale_down(rating1)
-        rating2_glicko2: RatingInGlicko2 = self._scale_down(rating2)
+        rating1_glicko2: RatingInGlicko2 = _scale_to_glicko2(rating1)
+        rating2_glicko2: RatingInGlicko2 = _scale_to_glicko2(rating2)
         impact: float = self._reduce_impact(rating2_glicko2)
         expectation: float = self._expect_score_in_glicko2(rating1_glicko2, rating2_glicko2, impact)
         return expectation

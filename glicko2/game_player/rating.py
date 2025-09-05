@@ -1,5 +1,4 @@
-from dataclasses import dataclass, field
-from functools import lru_cache
+from dataclasses import dataclass
 
 from ..constant_value import R_INITIAL, RD_INITIAL, SIGMA_INITIAL
 
@@ -18,7 +17,7 @@ class RatingInGlicko2:
     sigma: float
 
 
-@dataclass(slots=True)
+@dataclass(slots=True, frozen=True)
 class Rating:
     """
     Rating in old Glicko (and Elo) scale.
@@ -30,14 +29,22 @@ class Rating:
     r: float = R_INITIAL
     rd: float = RD_INITIAL
     sigma: float = SIGMA_INITIAL
-    rating_in_glicko2: RatingInGlicko2 = field(init=False)
-
-    def __post_init__(self) -> None:
-        self.rating_in_glicko2 = _scale_to_glicko2(self.r, self.rd, self.sigma)
 
 
-@lru_cache(maxsize=10000)
-def _scale_to_glicko2(r: float, rd: float, sigma: float) -> RatingInGlicko2:
-    mu: float = (r - REF_R) / RATIO
-    phi: float = rd / RATIO
-    return RatingInGlicko2(mu, phi, sigma)
+def _scale_to_glicko2(rating: Rating) -> RatingInGlicko2:
+    """
+    In the Mark Glickman's paper, he says the rating scale for Glicko-2 is different from that of Original Glicko (and Elo).
+    This function converts rating and RD from old-style to Glicko-2's scale (Step 2 in the paper).
+    """
+    mu: float = (rating.r - REF_R) / RATIO
+    phi: float = rating.rd / RATIO
+    return RatingInGlicko2(mu, phi, rating.sigma)
+
+
+def _scale_to_oldstyle(rating_in_glicko2: RatingInGlicko2) -> Rating:
+    """
+    This function converts rating and RD from Glicko-2 to old-style.
+    """
+    r: float = rating_in_glicko2.mu * RATIO + REF_R
+    rd: float = rating_in_glicko2.phi * RATIO
+    return Rating(r, rd, rating_in_glicko2.sigma)
