@@ -2,6 +2,7 @@ import csv
 import json
 import math
 from datetime import date
+from typing import Any
 
 from glicko2 import game_rate_calculate
 
@@ -16,6 +17,28 @@ def assess_value(value: float, ref: float) -> bool:
     It assesses if result value almost equals to reference value.
     """
     return math.fabs(value - ref) < ALLOWABLE
+
+
+def assess_element(element_1: Any, element_2: Any) -> bool:
+    """
+    It compares two element. If element is list, dict or tuple, do recursive comparison.
+
+    If an element is float, use assess_value() function to compare,
+    and allows ALLOWABLE error.
+    """
+    if type(element_1) is not type(element_2):
+        return False
+    if isinstance(element_1, float):
+        return assess_value(element_1, element_2)
+    if isinstance(element_1, tuple | list):
+        if len(element_1) != len(element_2):
+            return False
+        return all(assess_element(element_1[i], element_2[i]) for i in range(len(element_1)))
+    if isinstance(element_1, dict):
+        if len(element_1) != len(element_2):
+            return False
+        return all(assess_element(element_1[key], element_2[key]) for key in element_1)
+    return bool(element_1 == element_2)
 
 
 def _get_sample_data() -> list[tuple[str | date, str, str, float]]:
@@ -43,4 +66,4 @@ def test_game_rate_calculate() -> None:
     assert assess_value(check_game_player.player.rating.sigma, 0.0599)
     with open(SAMPLE_RESULT_JSON_FILE) as f:
         sample_result = json.load(f)
-    assert json.loads(game_player_list.dump_json()) == sample_result
+    assert assess_element(json.loads(game_player_list.dump_json()), sample_result)

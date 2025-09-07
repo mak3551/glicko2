@@ -3,7 +3,7 @@ from datetime import date, timedelta
 from .game_player.game_player import GamePlayerList
 from .game_player.player import Player
 from .rate_period import rate_period
-from .rating_system.glicko2.glicko2 import Glicko2
+from .rating_system.glicko2_np.glicko2_np import Glicko2Np
 from .rating_system.rating_system import RatingSystem
 
 
@@ -100,7 +100,9 @@ def calculate_rating_in_rate_period(
     return None
 
 
-def game_rate_calculate(gamelist: list[tuple[str | date, str, str, float]], per_days: int | timedelta = 90) -> GamePlayerList:
+def game_rate_calculate(
+    gamelist: list[tuple[str | date, str, str, float]], per_days: int | timedelta = 90, rating_system: RatingSystem | None = None
+) -> GamePlayerList:
     """
         argument is a list like this:
         [(date, name_1, name_2, result), (date, name_1, name_2, result), ...]
@@ -109,7 +111,8 @@ def game_rate_calculate(gamelist: list[tuple[str | date, str, str, float]], per_
     result is float. if name_1 wins, result is 1.0. If name_1 loses, result is 0.0.
     If draw, result is 0.5.
     """
-    rating_system: RatingSystem = Glicko2()
+    if rating_system is None:
+        rating_system = Glicko2Np()
     sorted_gamelist, player_list = _extract_player_list_from_gamelist(gamelist)
     divided_gamelist = _divide_sorted_gamelist(sorted_gamelist, player_list, per_days)
     for game_rate_period in divided_gamelist:
