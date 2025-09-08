@@ -11,6 +11,7 @@ This code is a fork of https://github.com/sublee/glicko2.
 """
 
 import math
+from dataclasses import dataclass
 
 import numpy as np
 import numpy.typing as npt
@@ -18,6 +19,21 @@ import numpy.typing as npt
 from ...constant_value import DRAW, EPSILON, LOSS, RD_INITIAL, SIGMA_INITIAL, TAU, WIN
 from ...game_player.rating import Rating, RatingInGlicko2, _scale_to_glicko2, _scale_to_oldstyle
 from ..rating_system import RatingSystem
+
+
+@dataclass(slots=True)
+class RatingInGlicko2Np:
+    mu: np.float64
+    phi: np.float64
+    sigma: np.float64
+
+    def __init__(self, rating: RatingInGlicko2):
+        self.mu = np.float64(rating.mu)
+        self.phi = np.float64(rating.phi)
+        self.sigma = np.float64(rating.sigma)
+
+    def rating_in_glicko2(self) -> RatingInGlicko2:
+        return RatingInGlicko2(mu=float(self.mu), phi=float(self.phi), sigma=float(self.sigma))
 
 
 class Glicko2Np(RatingSystem):
@@ -62,7 +78,7 @@ class Glicko2Np(RatingSystem):
 
     def _expect_score_in_glicko2_ndarray(
         self,
-        mu: float,
+        mu: np.float64,
         mu_opponents_ndarray: npt.NDArray[np.float64],
         impact_ndarray: npt.NDArray[np.float64],
     ) -> npt.NDArray[np.float64]:
@@ -115,7 +131,7 @@ class Glicko2Np(RatingSystem):
         return result_sigma
 
     def _convert_series_to_ndarray(self, series: list[tuple[float, Rating]]) -> npt.NDArray[np.float64]:
-        return np.array([[t[0], t[1].r, t[1].rd, t[1].sigma] for t in series])
+        return np.array([[t[0], t[1].r, t[1].rd, t[1].sigma] for t in series], dtype=np.float64)
 
     def rate(self, rating: Rating, series: list[tuple[float, Rating]]) -> Rating:
         """
@@ -126,10 +142,9 @@ class Glicko2Np(RatingSystem):
         In the Mark Glickman's paper, he says Glicko-2 works best when the number of games in a rating period is moderate to large,
         say an average of at least 10-15 games per player in a rating period.
         """
-        series_ndarray = self._convert_series_to_ndarray(series)
         # Step 2. For each player, convert the rating and RD's onto the
         #         Glicko-2 scale.
-        rating_in_glicko2: RatingInGlicko2 = _scale_to_glicko2(rating)
+        rating_in_glicko2: RatingInGlicko2Np = RatingInGlicko2Np(_scale_to_glicko2(rating))
         if not series:
             # If the team didn't play in the series, do only Step 6
             phi_star: float = math.sqrt(rating_in_glicko2.phi**2 + rating_in_glicko2.sigma**2)
@@ -157,7 +172,7 @@ class Glicko2Np(RatingSystem):
 
         # Step 5. Determine the new value, Sigma', ot the sigma. This
         #         computation requires iteration.
-        sigma: float = self._determine_sigma(rating_in_glicko2, difference, variance)
+        sigma: float = self._determine_sigma(rating_in_glicko2.rating_in_glicko2(), difference, variance)
         # Step 6. Update the rating deviation to the new pre-rating period
         #         value, Phi*.
         phi_star = math.sqrt(rating_in_glicko2.phi**2 + sigma**2)
