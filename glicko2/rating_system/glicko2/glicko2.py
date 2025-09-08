@@ -11,6 +11,7 @@ This code is a fork of https://github.com/sublee/glicko2.
 """
 
 import math
+from collections.abc import Iterable
 
 from ...constant_value import DRAW, EPSILON, LOSS, RD_INITIAL, SIGMA_INITIAL, TAU, WIN
 from ...game_player.rating import Rating, RatingInGlicko2, _scale_to_glicko2, _scale_to_oldstyle
@@ -87,7 +88,7 @@ class Glicko2(RatingSystem):
         result_sigma: float = math.exp(1) ** (a / 2)
         return result_sigma
 
-    def rate(self, rating: Rating, series: list[tuple[float, Rating]]) -> Rating:
+    def rate(self, rating: Rating, series: Iterable[tuple[float, Rating]]) -> Rating:
         """
         It returns new rating from old rating and game outcomes.
             rating : old rating

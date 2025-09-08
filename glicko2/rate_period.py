@@ -1,3 +1,4 @@
+from collections.abc import Iterable
 from datetime import date
 
 from .game_player.player import Player
@@ -7,7 +8,7 @@ from .rating_system.rating_system import RatingSystem
 
 
 def rate_period(
-    matches: list[tuple[Player, Player, float]],
+    matches: Iterable[tuple[Player, Player, float]],
     players_list: list[Player],
     system: RatingSystem | None = None,
     match_date: date | None = None,
@@ -38,7 +39,7 @@ def rate_period(
     return new_players_list
 
 
-def _get_series_of_player(matches: list[tuple[Player, Player, float]], player: Player) -> list[tuple[float, Rating]]:
+def _get_series_of_player(matches: Iterable[tuple[Player, Player, float]], player: Player) -> list[tuple[float, Rating]]:
     """
     extract player's game series from matches.
     """

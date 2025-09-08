@@ -11,6 +11,7 @@ This code is a fork of https://github.com/sublee/glicko2.
 """
 
 import math
+from collections.abc import Iterable
 from dataclasses import dataclass
 
 import numpy as np
@@ -130,10 +131,10 @@ class Glicko2Np(RatingSystem):
         result_sigma: float = math.exp(1) ** (a / 2)
         return result_sigma
 
-    def _convert_series_to_ndarray(self, series: list[tuple[float, Rating]]) -> npt.NDArray[np.float64]:
+    def _convert_series_to_ndarray(self, series: Iterable[tuple[float, Rating]]) -> npt.NDArray[np.float64]:
         return np.array([[t[0], t[1].r, t[1].rd, t[1].sigma] for t in series], dtype=np.float64)
 
-    def rate(self, rating: Rating, series: list[tuple[float, Rating]]) -> Rating:
+    def rate(self, rating: Rating, series: Iterable[tuple[float, Rating]]) -> Rating:
         """
         It returns new rating from old rating and game outcomes.
             rating : old rating

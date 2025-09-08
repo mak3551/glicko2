@@ -1,3 +1,4 @@
+from collections.abc import Iterable
 from datetime import date, timedelta
 
 from .game_player.game_player import GamePlayerList
@@ -8,7 +9,7 @@ from .rating_system.rating_system import RatingSystem
 
 
 def _extract_player_list_from_gamelist(
-    gamelist: list[tuple[str | date, str, str, float]],
+    gamelist: Iterable[tuple[str | date, str, str, float]],
 ) -> tuple[list[tuple[str | date, str, str, float]], GamePlayerList]:
     """
     sort gamelist and extract information of players from it.
@@ -108,7 +109,7 @@ def calculate_rating_in_rate_period(
 
 
 def game_rate_calculate(
-    gamelist: list[tuple[str | date, str, str, float]], per_days: int | timedelta = 90, rating_system: RatingSystem | None = None
+    gamelist: Iterable[tuple[str | date, str, str, float]], per_days: int | timedelta = 90, rating_system: RatingSystem | None = None
 ) -> GamePlayerList:
     """
         argument is a list like this:
