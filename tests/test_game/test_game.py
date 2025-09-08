@@ -2,6 +2,7 @@ import csv
 import json
 import math
 from datetime import date
+from timeit import timeit
 from typing import Any
 
 from glicko2 import game_rate_calculate
@@ -67,3 +68,22 @@ def test_game_rate_calculate() -> None:
     with open(SAMPLE_RESULT_JSON_FILE) as f:
         sample_result = json.load(f)
     assert assess_element(json.loads(game_player_list.dump_json()), sample_result)
+
+
+def benchmark() -> None:
+    print(
+        timeit(
+            "game_rate_calculate(sample_data, per_days=60,rating_system=system)",
+            setup="from glicko2 import Glicko2Np;from tests.test_game.test_game import _get_sample_data, game_rate_calculate; \
+                sample_data = _get_sample_data();system=Glicko2Np()",
+            number=10000,
+        )
+    )
+    print(
+        timeit(
+            "game_rate_calculate(sample_data, per_days=60,rating_system=system)",
+            setup="from glicko2 import Glicko2;from tests.test_game.test_game import _get_sample_data,game_rate_calculate; \
+                sample_data = _get_sample_data();system=Glicko2()",
+            number=10000,
+        )
+    )
