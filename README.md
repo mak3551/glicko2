@@ -1,3 +1,5 @@
+**This Project is under construction. Usage example below doesn't move.**
+
 # glicko2
 This project is a fork of https://github.com/sublee/glicko2. 
 It is distributed under the BSD 3-Clause License.
